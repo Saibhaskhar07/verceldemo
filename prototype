@@ -1,0 +1,679 @@
+import { useState, useEffect } from "react";
+
+const theme = {
+  bg: "#F7F9FC",
+  card: "#FFFFFF",
+  primary: "#0A6E6E",
+  primaryLight: "#E6F4F4",
+  primaryDark: "#064F4F",
+  accent: "#00C4A1",
+  accentLight: "#E6FAF7",
+  text: "#0D1F2D",
+  textMuted: "#6B7F8E",
+  border: "#E2EAF0",
+  danger: "#E05050",
+  dangerLight: "#FDF0F0",
+  warning: "#F5A623",
+  warningLight: "#FEF8EC",
+  success: "#22A06B",
+  successLight: "#EAFAF3",
+};
+
+const styles = {
+  phone: {
+    width: 390,
+    minHeight: 844,
+    background: theme.bg,
+    borderRadius: 48,
+    boxShadow: "0 40px 120px rgba(10,110,110,0.18), 0 8px 32px rgba(0,0,0,0.10)",
+    overflow: "hidden",
+    position: "relative",
+    fontFamily: "'DM Sans', sans-serif",
+    display: "flex",
+    flexDirection: "column",
+  },
+  statusBar: {
+    background: theme.primary,
+    padding: "14px 28px 10px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: 600,
+    letterSpacing: 0.2,
+  },
+  screen: {
+    flex: 1,
+    overflowY: "auto",
+    paddingBottom: 90,
+  },
+  navbar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    background: "#fff",
+    borderTop: `1px solid ${theme.border}`,
+    display: "flex",
+    justifyContent: "space-around",
+    padding: "10px 0 20px",
+    zIndex: 100,
+  },
+  navItem: (active) => ({
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 4,
+    color: active ? theme.primary : theme.textMuted,
+    fontSize: 10,
+    fontWeight: active ? 700 : 500,
+    cursor: "pointer",
+    transition: "all 0.2s",
+  }),
+  header: {
+    background: theme.primary,
+    padding: "20px 24px 28px",
+    color: "#fff",
+  },
+  card: (extra = {}) => ({
+    background: theme.card,
+    borderRadius: 20,
+    padding: "20px",
+    boxShadow: "0 2px 16px rgba(10,110,110,0.07)",
+    ...extra,
+  }),
+  btn: (variant = "primary", extra = {}) => ({
+    background: variant === "primary" ? theme.primary : variant === "accent" ? theme.accent : theme.primaryLight,
+    color: variant === "primary" ? "#fff" : variant === "accent" ? "#fff" : theme.primary,
+    border: "none",
+    borderRadius: 14,
+    padding: "14px 20px",
+    fontFamily: "'DM Sans', sans-serif",
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: "pointer",
+    width: "100%",
+    transition: "all 0.2s",
+    ...extra,
+  }),
+  tag: (color = theme.primaryLight, text = theme.primary) => ({
+    background: color,
+    color: text,
+    borderRadius: 8,
+    padding: "4px 10px",
+    fontSize: 11,
+    fontWeight: 700,
+    display: "inline-block",
+    letterSpacing: 0.3,
+  }),
+};
+
+// ─── ICONS ────────────────────────────────────────────────────────────────────
+const Icon = ({ name, size = 22, color = "currentColor" }) => {
+  const icons = {
+    home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    flask: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3h6m-6 0v6l-4 9a1 1 0 001 1.5h10a1 1 0 001-1.5l-4-9V3"/></svg>,
+    video: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>,
+    results: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+    ai: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>,
+    arrow: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+    check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+    alert: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+    clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+    star: <svg width={size} height={size} viewBox="0 0 24 24" fill={color} stroke={color} strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+    dino: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>,
+    bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+    user: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+    location: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    sparkle: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z"/></svg>,
+  };
+  return icons[name] || null;
+};
+
+// ─── HOME SCREEN ──────────────────────────────────────────────────────────────
+const HomeScreen = ({ setScreen }) => {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
+
+  return (
+    <div style={styles.screen}>
+      {/* Header */}
+      <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 13, opacity: 0.75, letterSpacing: 0.5, textTransform: "uppercase", fontWeight: 600 }}>Good morning</p>
+            <h2 style={{ margin: "4px 0 0", fontSize: 26, fontWeight: 800, letterSpacing: -0.5 }}>Jessica 👋</h2>
+          </div>
+          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 14, padding: 10, cursor: "pointer" }}>
+            <Icon name="bell" size={20} color="#fff" />
+          </div>
+        </div>
+
+        {/* Health Score Card */}
+        <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: 20, padding: "16px 20px", backdropFilter: "blur(10px)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 12, opacity: 0.8, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Health Score</p>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 4 }}>
+                <span style={{ fontSize: 38, fontWeight: 800, letterSpacing: -1 }}>87</span>
+                <span style={{ fontSize: 14, opacity: 0.8 }}>/100</span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ background: theme.accent, borderRadius: 10, padding: "6px 12px", fontSize: 12, fontWeight: 700, color: "#fff" }}>Good</div>
+              <p style={{ margin: "8px 0 0", fontSize: 11, opacity: 0.7 }}>Last updated today</p>
+            </div>
+          </div>
+          <div style={{ marginTop: 12, background: "rgba(255,255,255,0.15)", borderRadius: 8, height: 6, overflow: "hidden" }}>
+            <div style={{ width: "87%", height: "100%", background: theme.accent, borderRadius: 8, transition: "width 1s ease" }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "24px 20px 0" }}>
+        {/* Pending Action Banner */}
+        <div style={{ background: theme.warningLight, borderRadius: 16, padding: "14px 16px", marginBottom: 24, display: "flex", alignItems: "center", gap: 12, border: `1px solid ${theme.warning}30` }}>
+          <div style={{ background: theme.warning, borderRadius: 10, padding: 8 }}>
+            <Icon name="alert" size={16} color="#fff" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: theme.text }}>Blood results ready</p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: theme.textMuted }}>Tap to view & understand your results</p>
+          </div>
+          <div style={{ cursor: "pointer" }} onClick={() => setScreen("ai")}>
+            <Icon name="arrow" size={18} color={theme.warning} />
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <h3 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: theme.text, letterSpacing: -0.3 }}>What do you need?</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 28 }}>
+          {[
+            { icon: "flask", label: "Book a Test", sub: "Blood, allergy & more", screen: "book", color: theme.primaryLight, iconColor: theme.primary },
+            { icon: "video", label: "See a GP", sub: "Telehealth in minutes", screen: "telehealth", color: "#EEF2FF", iconColor: "#4F6EF7" },
+            { icon: "results", label: "My Results", sub: "View all history", screen: "results", color: theme.accentLight, iconColor: theme.accent },
+            { icon: "ai", label: "AI Explainer", sub: "Decode your results", screen: "ai", color: "#FFF3E6", iconColor: "#F57C00" },
+          ].map((item) => (
+            <div key={item.label} style={{ ...styles.card(), cursor: "pointer", transition: "transform 0.15s" }}
+              onClick={() => setScreen(item.screen)}
+              onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+              onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+            >
+              <div style={{ background: item.color, borderRadius: 12, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <Icon name={item.icon} size={20} color={item.iconColor} />
+              </div>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: theme.text }}>{item.label}</p>
+              <p style={{ margin: "3px 0 0", fontSize: 11, color: theme.textMuted }}>{item.sub}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Upcoming */}
+        <h3 style={{ margin: "0 0 14px", fontSize: 17, fontWeight: 800, color: theme.text, letterSpacing: -0.3 }}>Upcoming</h3>
+        <div style={{ ...styles.card({ marginBottom: 12 }), display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ background: "#EEF2FF", borderRadius: 12, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Icon name="video" size={22} color="#4F6EF7" />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: theme.text }}>GP Telehealth</p>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: theme.textMuted }}>Dr. Sarah Chen · Tomorrow, 10:30 AM</p>
+          </div>
+          <div style={styles.tag("#EEF2FF", "#4F6EF7")}>Soon</div>
+        </div>
+        <div style={{ ...styles.card(), display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ background: theme.primaryLight, borderRadius: 12, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Icon name="flask" size={22} color={theme.primary} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: theme.text }}>Full Blood Count</p>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: theme.textMuted }}>SA Pathology, Adelaide · Thu 9:00 AM</p>
+          </div>
+          <div style={styles.tag(theme.primaryLight, theme.primary)}>Booked</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── BOOK A TEST SCREEN ────────────────────────────────────────────────────────
+const BookTestScreen = ({ setScreen }) => {
+  const [selected, setSelected] = useState(null);
+  const [step, setStep] = useState(1);
+
+  const tests = [
+    { id: 1, name: "Full Blood Count", time: "24-48 hrs", price: "$45", popular: true, icon: "flask" },
+    { id: 2, name: "Allergy Panel", time: "3-5 days", price: "$89", popular: false, icon: "flask" },
+    { id: 3, name: "Hormone Check", time: "2-3 days", price: "$120", popular: true, icon: "flask" },
+    { id: 4, name: "Vitamin & Deficiency", time: "24-48 hrs", price: "$65", popular: false, icon: "flask" },
+    { id: 5, name: "STI Screen", time: "24 hrs", price: "$79", popular: false, icon: "flask" },
+    { id: 6, name: "Thyroid Function", time: "2-3 days", price: "$55", popular: false, icon: "flask" },
+  ];
+
+  if (step === 2 && selected) {
+    const test = tests.find(t => t.id === selected);
+    return (
+      <div style={styles.screen}>
+        <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ cursor: "pointer", background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: 8 }} onClick={() => setStep(1)}>
+              <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Confirm Booking</h2>
+          </div>
+        </div>
+        <div style={{ padding: "24px 20px" }}>
+          <div style={styles.card({ marginBottom: 20 })}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
+              <div style={{ background: theme.primaryLight, borderRadius: 14, width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="flask" size={24} color={theme.primary} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.text }}>{test.name}</h3>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: theme.textMuted }}>Results in {test.time}</p>
+              </div>
+            </div>
+            {[
+              { label: "Location", value: "SA Pathology, Rundle Mall" },
+              { label: "Date", value: "Thursday, 27 Mar 2025" },
+              { label: "Time", value: "9:00 AM" },
+              { label: "GP Referral", value: "Included (telehealth)" },
+              { label: "Medicare Rebate", value: "Applicable ✓" },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: `1px solid ${theme.border}` }}>
+                <span style={{ fontSize: 13, color: theme.textMuted, fontWeight: 500 }}>{label}</span>
+                <span style={{ fontSize: 13, color: theme.text, fontWeight: 700 }}>{value}</span>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "space-between", padding: "14px 0 0" }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: theme.text }}>Total (after rebate)</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: theme.primary }}>{test.price}</span>
+            </div>
+          </div>
+          <button style={styles.btn("primary")} onClick={() => { setStep(3); }}>Confirm & Book</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 3) {
+    return (
+      <div style={styles.screen}>
+        <div style={{ padding: "60px 20px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <div style={{ background: theme.successLight, borderRadius: "50%", width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+            <Icon name="check" size={40} color={theme.success} />
+          </div>
+          <h2 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 800, color: theme.text }}>You're booked!</h2>
+          <p style={{ margin: "0 0 32px", fontSize: 15, color: theme.textMuted, lineHeight: 1.6 }}>Your appointment is confirmed. We'll remind you the night before and handle your referral automatically.</p>
+          <div style={{ ...styles.card({ width: "100%", marginBottom: 20 }), textAlign: "left" }}>
+            {[
+              { icon: "check", text: "GP referral issued automatically", color: theme.success },
+              { icon: "check", text: "SA Pathology notified", color: theme.success },
+              { icon: "check", text: "Results sent to your Dino app", color: theme.success },
+              { icon: "check", text: "AI explanation ready on results day", color: theme.success },
+            ].map(({ icon, text, color }) => (
+              <div key={text} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
+                <div style={{ background: theme.successLight, borderRadius: 8, padding: 6 }}>
+                  <Icon name={icon} size={14} color={color} />
+                </div>
+                <span style={{ fontSize: 13, color: theme.text, fontWeight: 500 }}>{text}</span>
+              </div>
+            ))}
+          </div>
+          <button style={styles.btn("primary")} onClick={() => { setStep(1); setSelected(null); }}>Back to Home</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.screen}>
+      <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+        <h2 style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800 }}>Book a Test</h2>
+        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>No referral needed — we handle it for you</p>
+      </div>
+      <div style={{ padding: "24px 20px 0" }}>
+        <div style={{ background: theme.primaryLight, borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
+          <Icon name="location" size={16} color={theme.primary} />
+          <span style={{ fontSize: 13, color: theme.primary, fontWeight: 600 }}>Nearest lab: SA Pathology, Rundle Mall (0.8km)</span>
+        </div>
+        <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 800, color: theme.text }}>Select a test</h3>
+        {tests.map((test) => (
+          <div key={test.id}
+            style={{ ...styles.card({ marginBottom: 12, border: selected === test.id ? `2px solid ${theme.primary}` : `2px solid transparent`, cursor: "pointer", transition: "all 0.2s" }) }}
+            onClick={() => setSelected(test.id)}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ background: selected === test.id ? theme.primary : theme.primaryLight, borderRadius: 12, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.2s" }}>
+                <Icon name="flask" size={20} color={selected === test.id ? "#fff" : theme.primary} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: theme.text }}>{test.name}</p>
+                  {test.popular && <span style={styles.tag(theme.accentLight, theme.accent)}>Popular</span>}
+                </div>
+                <p style={{ margin: "3px 0 0", fontSize: 12, color: theme.textMuted }}><Icon name="clock" size={11} color={theme.textMuted} /> Results in {test.time}</p>
+              </div>
+              <span style={{ fontSize: 15, fontWeight: 800, color: theme.primary }}>{test.price}</span>
+            </div>
+          </div>
+        ))}
+        <div style={{ height: 20 }} />
+        <button style={{ ...styles.btn("primary"), opacity: selected ? 1 : 0.5 }} disabled={!selected} onClick={() => selected && setStep(2)}>
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── TELEHEALTH SCREEN ─────────────────────────────────────────────────────────
+const TelehealthScreen = () => {
+  const [selected, setSelected] = useState(null);
+  const [booked, setBooked] = useState(false);
+
+  const doctors = [
+    { id: 1, name: "Dr. Sarah Chen", specialty: "General Practice", rating: 4.9, reviews: 312, wait: "Now", available: true, avatar: "SC" },
+    { id: 2, name: "Dr. Marcus Webb", specialty: "General Practice", rating: 4.8, reviews: 189, wait: "12 min", available: true, avatar: "MW" },
+    { id: 3, name: "Dr. Priya Nair", specialty: "Women's Health", rating: 5.0, reviews: 94, wait: "25 min", available: true, avatar: "PN" },
+  ];
+
+  if (booked) {
+    return (
+      <div style={styles.screen}>
+        <div style={{ padding: "60px 20px 24px", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+          <div style={{ background: "#EEF2FF", borderRadius: "50%", width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 24 }}>
+            <Icon name="video" size={40} color="#4F6EF7" />
+          </div>
+          <h2 style={{ margin: "0 0 10px", fontSize: 26, fontWeight: 800, color: theme.text }}>Consult confirmed!</h2>
+          <p style={{ margin: "0 0 32px", fontSize: 15, color: theme.textMuted, lineHeight: 1.6 }}>Your GP will issue your referral during the consult. Results will be automatically sent to your Dino app.</p>
+          <div style={{ background: "#EEF2FF", borderRadius: 20, padding: "20px", width: "100%", marginBottom: 20 }}>
+            <p style={{ margin: "0 0 4px", fontSize: 13, color: "#4F6EF7", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>Joining in</p>
+            <p style={{ margin: 0, fontSize: 42, fontWeight: 800, color: "#4F6EF7", letterSpacing: -1 }}>12:00</p>
+          </div>
+          <button style={{ ...styles.btn("primary", { background: "#4F6EF7" }) }}>Join Video Call</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.screen}>
+      <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+        <h2 style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800 }}>See a GP</h2>
+        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Telehealth consult · Medicare rebate applies</p>
+      </div>
+      <div style={{ padding: "24px 20px 0" }}>
+        <div style={{ background: "#EEF2FF", borderRadius: 16, padding: "14px 16px", marginBottom: 24, display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <Icon name="sparkle" size={16} color="#4F6EF7" />
+          <p style={{ margin: 0, fontSize: 13, color: "#4F6EF7", fontWeight: 600, lineHeight: 1.5 }}>Your GP will issue referrals instantly. Results automatically flow back to your Dino app — no follow up appointment needed.</p>
+        </div>
+        <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 800, color: theme.text }}>Available GPs right now</h3>
+        {doctors.map((doc) => (
+          <div key={doc.id}
+            style={{ ...styles.card({ marginBottom: 12, border: selected === doc.id ? `2px solid #4F6EF7` : `2px solid transparent`, cursor: "pointer", transition: "all 0.2s" }) }}
+            onClick={() => setSelected(doc.id)}
+          >
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <div style={{ background: selected === doc.id ? "#4F6EF7" : "#EEF2FF", borderRadius: 14, width: 52, height: 52, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, fontWeight: 800, color: selected === doc.id ? "#fff" : "#4F6EF7", transition: "all 0.2s" }}>
+                {doc.avatar}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: theme.text }}>{doc.name}</p>
+                <p style={{ margin: "2px 0 4px", fontSize: 12, color: theme.textMuted }}>{doc.specialty}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <Icon name="star" size={12} color="#F5A623" />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: theme.text }}>{doc.rating}</span>
+                  <span style={{ fontSize: 12, color: theme.textMuted }}>({doc.reviews} reviews)</span>
+                </div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={styles.tag(doc.wait === "Now" ? theme.successLight : theme.primaryLight, doc.wait === "Now" ? theme.success : theme.primary)}>
+                  {doc.wait === "Now" ? "Available" : `~${doc.wait}`}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        <div style={{ height: 20 }} />
+        <button style={{ ...styles.btn("primary", { background: selected ? "#4F6EF7" : "#9BA8C4", opacity: selected ? 1 : 0.7 }) }} disabled={!selected} onClick={() => selected && setBooked(true)}>
+          Book Consult — $15 gap fee
+        </button>
+        <p style={{ textAlign: "center", fontSize: 12, color: theme.textMuted, marginTop: 10 }}>Medicare rebate of ~$40 applies automatically</p>
+      </div>
+    </div>
+  );
+};
+
+// ─── RESULTS SCREEN ────────────────────────────────────────────────────────────
+const ResultsScreen = ({ setScreen }) => {
+  const results = [
+    { id: 1, name: "Full Blood Count", date: "Today", status: "review", statusLabel: "Needs Review", items: 3 },
+    { id: 2, name: "Vitamin D & B12", date: "2 weeks ago", status: "normal", statusLabel: "All Normal", items: 2 },
+    { id: 3, name: "Thyroid Function", date: "1 month ago", status: "normal", statusLabel: "All Normal", items: 4 },
+    { id: 4, name: "Allergy Panel", date: "3 months ago", status: "normal", statusLabel: "All Normal", items: 12 },
+  ];
+
+  const statusColor = (s) => s === "review" ? theme.warning : theme.success;
+  const statusBg = (s) => s === "review" ? theme.warningLight : theme.successLight;
+
+  return (
+    <div style={styles.screen}>
+      <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+        <h2 style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800 }}>My Results</h2>
+        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>All your health data, in plain English</p>
+      </div>
+      <div style={{ padding: "24px 20px 0" }}>
+        {results.map((result) => (
+          <div key={result.id} style={{ ...styles.card({ marginBottom: 14, cursor: "pointer" }) }} onClick={() => setScreen("ai")}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ background: statusBg(result.status), borderRadius: 12, width: 48, height: 48, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icon name="results" size={22} color={statusColor(result.status)} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: theme.text }}>{result.name}</p>
+                <p style={{ margin: "3px 0 4px", fontSize: 12, color: theme.textMuted }}>{result.date} · {result.items} markers tested</p>
+                <div style={styles.tag(statusBg(result.status), statusColor(result.status))}>{result.statusLabel}</div>
+              </div>
+              <Icon name="arrow" size={18} color={theme.textMuted} />
+            </div>
+          </div>
+        ))}
+
+        {/* Summary Stats */}
+        <h3 style={{ margin: "24px 0 14px", fontSize: 16, fontWeight: 800, color: theme.text }}>Your Health Overview</h3>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+          {[
+            { value: "4", label: "Tests done", color: theme.primary },
+            { value: "21", label: "Markers checked", color: "#4F6EF7" },
+            { value: "18", label: "In range", color: theme.success },
+          ].map(({ value, label, color }) => (
+            <div key={label} style={styles.card({ textAlign: "center", padding: "16px 10px" })}>
+              <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color }}>{value}</p>
+              <p style={{ margin: "4px 0 0", fontSize: 10, color: theme.textMuted, fontWeight: 600, lineHeight: 1.3 }}>{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── AI EXPLAINER SCREEN ───────────────────────────────────────────────────────
+const AIScreen = () => {
+  const [expanded, setExpanded] = useState(null);
+
+  const markers = [
+    {
+      id: 1, name: "Haemoglobin", value: "110 g/L", range: "120–160 g/L", status: "low",
+      plain: "Your haemoglobin is slightly below the normal range. This protein carries oxygen in your blood. A low level can sometimes cause tiredness or shortness of breath.",
+      action: "Your GP may want to discuss iron supplementation. Book a follow up consult.",
+    },
+    {
+      id: 2, name: "White Blood Cells", value: "7.2 ×10⁹/L", range: "4.0–11.0 ×10⁹/L", status: "normal",
+      plain: "Your white blood cell count is completely normal. These are your immune system soldiers and yours are at a healthy level.",
+      action: "No action needed.",
+    },
+    {
+      id: 3, name: "Platelets", value: "245 ×10⁹/L", range: "150–400 ×10⁹/L", status: "normal",
+      plain: "Your platelet count is normal. Platelets help your blood clot when you're injured. Yours are within a healthy range.",
+      action: "No action needed.",
+    },
+    {
+      id: 4, name: "Iron (Serum)", value: "8 µmol/L", range: "11–32 µmol/L", status: "low",
+      plain: "Your iron levels are below normal. Iron is essential for making haemoglobin. Low iron is one of the most common causes of tiredness in young women.",
+      action: "Discuss iron supplementation or dietary changes with your GP.",
+    },
+    {
+      id: 5, name: "Ferritin", value: "22 µg/L", range: "20–200 µg/L", status: "borderline",
+      plain: "Your ferritin is at the low end of normal. Ferritin is your body's iron storage protein. While technically in range, it's worth monitoring.",
+      action: "Monitor and retest in 3 months.",
+    },
+  ];
+
+  const statusConfig = {
+    normal: { bg: theme.successLight, color: theme.success, label: "Normal" },
+    low: { bg: theme.dangerLight, color: theme.danger, label: "Below range" },
+    borderline: { bg: theme.warningLight, color: theme.warning, label: "Borderline" },
+  };
+
+  return (
+    <div style={styles.screen}>
+      <div style={{ ...styles.header, borderRadius: "0 0 32px 32px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+          <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: 10, padding: 8 }}>
+            <Icon name="sparkle" size={18} color="#fff" />
+          </div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>AI Explainer</h2>
+            <p style={{ margin: 0, fontSize: 12, opacity: 0.8 }}>Full Blood Count · Today</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "20px 20px 0" }}>
+        {/* Summary Banner */}
+        <div style={{ background: theme.warningLight, border: `1px solid ${theme.warning}40`, borderRadius: 16, padding: "16px", marginBottom: 24 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <Icon name="alert" size={18} color={theme.warning} />
+            <div>
+              <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: theme.text }}>2 markers need attention</p>
+              <p style={{ margin: 0, fontSize: 13, color: theme.textMuted, lineHeight: 1.5 }}>Your results suggest possible low iron. This is common and treatable. Tap each marker to understand what it means.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div style={{ background: theme.primaryLight, borderRadius: 12, padding: "10px 14px", marginBottom: 20, display: "flex", gap: 8 }}>
+          <Icon name="alert" size={14} color={theme.primary} />
+          <p style={{ margin: 0, fontSize: 11, color: theme.primary, fontWeight: 600, lineHeight: 1.5 }}>This is an educational tool only. All clinical decisions are made by your GP. Book a follow up consult to discuss your results.</p>
+        </div>
+
+        <h3 style={{ margin: "0 0 14px", fontSize: 16, fontWeight: 800, color: theme.text }}>Your Markers</h3>
+
+        {markers.map((marker) => {
+          const config = statusConfig[marker.status];
+          const isExpanded = expanded === marker.id;
+          return (
+            <div key={marker.id} style={{ ...styles.card({ marginBottom: 12, cursor: "pointer", transition: "all 0.2s" }) }}
+              onClick={() => setExpanded(isExpanded ? null : marker.id)}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: theme.text }}>{marker.name}</p>
+                    <span style={styles.tag(config.bg, config.color)}>{config.label}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: config.color }}>{marker.value}</span>
+                    <span style={{ fontSize: 12, color: theme.textMuted }}>Range: {marker.range}</span>
+                  </div>
+                </div>
+                <div style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                  <Icon name="arrow" size={16} color={theme.textMuted} />
+                </div>
+              </div>
+              {isExpanded && (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${theme.border}` }}>
+                  <div style={{ background: config.bg, borderRadius: 12, padding: "12px 14px", marginBottom: 10 }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 800, color: config.color, textTransform: "uppercase", letterSpacing: 0.5 }}>What this means</p>
+                    <p style={{ margin: 0, fontSize: 13, color: theme.text, lineHeight: 1.6 }}>{marker.plain}</p>
+                  </div>
+                  <div style={{ background: theme.primaryLight, borderRadius: 12, padding: "12px 14px" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 800, color: theme.primary, textTransform: "uppercase", letterSpacing: 0.5 }}>Next step</p>
+                    <p style={{ margin: 0, fontSize: 13, color: theme.text, lineHeight: 1.6 }}>{marker.action}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        <button style={{ ...styles.btn("primary", { background: "#4F6EF7", marginTop: 8 }) }}>
+          Book GP Follow Up
+        </button>
+        <div style={{ height: 20 }} />
+      </div>
+    </div>
+  );
+};
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+export default function DinoApp() {
+  const [screen, setScreen] = useState("home");
+
+  const nav = [
+    { id: "home", icon: "home", label: "Home" },
+    { id: "book", icon: "flask", label: "Book Test" },
+    { id: "telehealth", icon: "video", label: "GP" },
+    { id: "results", icon: "results", label: "Results" },
+    { id: "ai", icon: "ai", label: "Explainer" },
+  ];
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #E6F4F4 0%, #F0F4FF 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", fontFamily: "'DM Sans', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+        {/* Logo above phone */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ background: theme.primary, borderRadius: 14, width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon name="dino" size={22} color="#fff" />
+          </div>
+          <div>
+            <span style={{ fontSize: 26, fontWeight: 900, color: theme.primary, letterSpacing: -1 }}>dino</span>
+            <span style={{ fontSize: 12, color: theme.textMuted, display: "block", marginTop: -4, fontWeight: 600, letterSpacing: 0.5 }}>know sooner</span>
+          </div>
+        </div>
+
+        {/* Phone */}
+        <div style={styles.phone}>
+          {/* Status Bar */}
+          <div style={styles.statusBar}>
+            <span>9:41</span>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4" y="2" width="3" height="10" rx="1"/><rect x="8" y="0" width="3" height="12" rx="1"/><rect x="12" y="1" width="3" height="11" rx="1"/></svg>
+              <svg width="16" height="12" viewBox="0 0 24 24" fill="white"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.56 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/></svg>
+              <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="white" strokeOpacity="0.35"/><rect x="1" y="1" width="16" height="10" rx="3" fill="white"/><path d="M23 4v4a2 2 0 000-4z" fill="white" fillOpacity="0.4"/></svg>
+            </div>
+          </div>
+
+          {/* Screen */}
+          {screen === "home" && <HomeScreen setScreen={setScreen} />}
+          {screen === "book" && <BookTestScreen setScreen={setScreen} />}
+          {screen === "telehealth" && <TelehealthScreen />}
+          {screen === "results" && <ResultsScreen setScreen={setScreen} />}
+          {screen === "ai" && <AIScreen />}
+
+          {/* Nav Bar */}
+          <div style={styles.navbar}>
+            {nav.map((item) => (
+              <div key={item.id} style={styles.navItem(screen === item.id)} onClick={() => setScreen(item.id)}>
+                <Icon name={item.icon} size={22} color={screen === item.id ? theme.primary : theme.textMuted} />
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
